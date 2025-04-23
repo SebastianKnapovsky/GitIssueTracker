@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace GitIssueTracker.Core.Enums
 {
-    public enum GitServiceType
+    public enum IssueStatus
     {
-        GitHub,
-        GitLab
+        Open,
+        Closed
     }
 }

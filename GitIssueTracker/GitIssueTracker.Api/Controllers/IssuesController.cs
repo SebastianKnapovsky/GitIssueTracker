@@ -10,70 +10,127 @@ namespace GitIssueTracker.Api.Controllers
     [Route("api/[controller]")]
     public class IssuesController : Controller
     {
-        private readonly IGitServiceFactory _gitServiceFactory;
+        private readonly IGitHubService _gitHubService;
+        private readonly IGitLabService _gitLabService;
         private readonly ILogger<IssuesController> _logger;
-        public IssuesController(IGitServiceFactory gitServiceFactory, ILogger<IssuesController> logger)
+        public IssuesController(IGitHubService gitHubService, IGitLabService gitLabService, ILogger<IssuesController> logger)
         {
-            _gitServiceFactory = gitServiceFactory;
+            _gitHubService = gitHubService;
+            _gitLabService = gitLabService;
             _logger = logger;
         }
 
-        [HttpPost("repository")]
-        public async Task<IActionResult> CreateIssue(string repository, [FromBody] IssueRequest request, [FromQuery] GitServiceType type = GitServiceType.GitHub)
+        #region GitHub
+
+        [HttpPost("github/{repository}")]
+        public async Task<IActionResult> CreateIssueGitHub(string repository, [FromBody] IssueRequest request)
         {
-            _logger.LogInformation("Tworzenie zgłoszenia w repozytorium {Repository}", repository);
+            _logger.LogInformation("Tworzenie zgłoszenia GitHub w repozytorium {Repository}", repository);
 
             try
             {
-                var service = _gitServiceFactory.GetService(type);
-                var response = await service.CreateIssueAsync(repository, request);
+                var response = await _gitHubService.CreateIssueAsync(repository, request);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas tworzenia zgłoszenia w repozytorium {Repository}", repository);
-                return StatusCode(500, "Wystąpił błąd podczas tworzenia zgłoszenia.");
+                _logger.LogError(ex, "Błąd podczas tworzenia zgłoszenia w GitHub repozytorium {Repository}", repository);
+                return StatusCode(500, "Wystąpił błąd podczas tworzenia zgłoszenia GitHub.");
             }
         }
-        [HttpPut("{repository}/{issueNumber}")]
-        public async Task<IActionResult> UpdateIssue(string repository, int issueNumber, [FromBody] IssueRequest request, [FromQuery] GitServiceType type = GitServiceType.GitHub)
+        [HttpPut("github/{repository}/{issueNumber}")]
+        public async Task<IActionResult> UpdateIssueGitHub(string repository, int issueNumber, [FromBody] IssueRequest request)
         {
-            _logger.LogInformation("Aktualizacja zgłoszenia #{IssueNumber} w repo {Repository}", issueNumber, repository);
+            _logger.LogInformation("Aktualizacja zgłoszenia GitHub #{IssueNumber} w repo {Repository}", issueNumber, repository);
 
             try
             {
-                var service = _gitServiceFactory.GetService(type);
-                var response = await service.UpdateIssueAsync(repository, issueNumber, request);
+                var response = await _gitHubService.UpdateIssueAsync(repository, issueNumber, request);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas aktualizacji zgłoszenia #{IssueNumber} w repo {Repository}", issueNumber, repository);
-                return StatusCode(500, "Wystąpił błąd podczas aktualizacji zgłoszenia.");
+                _logger.LogError(ex, "Błąd podczas aktualizacji zgłoszenia GitHub #{IssueNumber} w repo {Repository}", issueNumber, repository);
+                return StatusCode(500, "Wystąpił błąd podczas aktualizacji zgłoszenia GitHub.");
             }
         }
-        [HttpDelete("{repository}/{issueNumber}")]
-        public async Task<IActionResult> CloseIssue(string repository, int issueNumber, [FromQuery] GitServiceType type = GitServiceType.GitHub)
+        [HttpDelete("github/{repository}/{issueNumber}")]
+        public async Task<IActionResult> CloseIssueGitHub(string repository, int issueNumber)
         {
-            _logger.LogInformation("Zamykanie zgłoszenia #{IssueNumber} w repo {Repository}", issueNumber, repository);
+            _logger.LogInformation("Zamykanie zgłoszenia GitHub #{IssueNumber} w repo {Repository}", issueNumber, repository);
 
             try
             {
-                var service = _gitServiceFactory.GetService(type);
-                var result = await service.CloseIssueAsync(repository, issueNumber);
+                var result = await _gitHubService.CloseIssueAsync(repository, issueNumber);
                 if (result)
                 {
                     return NoContent();
                 }
 
-                _logger.LogWarning("Zamknięcie zgłoszenia #{IssueNumber} nie powiodło się w repo {Repository}", issueNumber, repository);
+                _logger.LogWarning("Zamknięcie zgłoszenia GitHub #{IssueNumber} nie powiodło się w repo {Repository}", issueNumber, repository);
                 return StatusCode(500, "Nie udało się zamknąć zgłoszenia.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas zamykania zgłoszenia #{IssueNumber} w repo {Repository}", issueNumber, repository);
+                _logger.LogError(ex, "Błąd podczas zamykania zgłoszenia GitHub #{IssueNumber} w repo {Repository}", issueNumber, repository);
                 return StatusCode(500, "Wystąpił błąd podczas zamykania zgłoszenia.");
             }
         }
+
+        #endregion
+
+        #region GitLab
+        [HttpPost("gitlab/{repository}")]
+        public async Task<IActionResult> CreateIssueGitLab(string repository, [FromBody] IssueRequest request)
+        {
+            _logger.LogInformation("Tworzenie zgłoszenia GitLab w repozytorium: {Repository}", repository);
+            try
+            {
+                var result = await _gitLabService.CreateIssueAsync(repository, request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Błąd podczas tworzenia zgłoszenia w GitLab repo: {Repository}", repository);
+                return StatusCode(500, "Wystąpił błąd podczas tworzenia zgłoszenia.");
+            }
+        }
+
+        [HttpPut("gitlab/{repository}/{issueNumber}")]
+        public async Task<IActionResult> UpdateIssueGitLab(string repository, int issueNumber, [FromBody] IssueRequest request)
+        {
+            _logger.LogInformation("Aktualizacja zgłoszenia GitLab #{IssueNumber} w repo {Repository}", issueNumber, repository);
+            try
+            {
+                var result = await _gitLabService.UpdateIssueAsync(repository, issueNumber, request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Błąd podczas aktualizacji zgłoszenia GitLab #{IssueNumber} w repo {Repository}", issueNumber, repository);
+                return StatusCode(500, "Wystąpił błąd podczas aktualizacji zgłoszenia.");
+            }
+        }
+
+        [HttpDelete("gitlab/{repository}/{issueNumber}")]
+        public async Task<IActionResult> CloseIssueGitLab(string repository, int issueNumber)
+        {
+            _logger.LogInformation("Zamykanie zgłoszenia GitLab #{IssueNumber} w repo {Repository}", issueNumber, repository);
+            try
+            {
+                var result = await _gitLabService.CloseIssueAsync(repository, issueNumber);
+                if (result)
+                    return NoContent();
+
+                _logger.LogWarning("Zamknięcie zgłoszenia GitLab #{IssueNumber} nie powiodło się w repo: {Repository}", issueNumber, repository);
+                return StatusCode(500, "Nie udało się zamknąć zgłoszenia.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Błąd podczas zamykania zgłoszenia GitLab #{IssueNumber} w repo: {Repository}", issueNumber, repository);
+                return StatusCode(500, "Wystąpił błąd podczas zamykania zgłoszenia.");
+            }
+        }
+        #endregion
     }
 }

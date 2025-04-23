@@ -10,9 +10,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHttpClient<GitHubService>();
-builder.Services.AddHttpClient<GitLabService>();
-builder.Services.AddScoped<IGitServiceFactory, GitServiceFactory>();
+builder.Services.AddHttpClient<IGitHubService, GitHubService>();
+builder.Services.AddHttpClient<IGitLabService, GitLabService>();
 
 var app = builder.Build();
 
