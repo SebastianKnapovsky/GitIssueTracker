@@ -1,5 +1,6 @@
 ﻿using GitIssueTracker.Core.Models;
 using GitIssueTracker.Core.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -19,10 +20,10 @@ namespace GitIssueTracker.Core.Services
         private readonly string _token;
         private readonly ILogger<GitHubService> _logger;
 
-        public GitHubService(HttpClient httpClient, string token,  ILogger<GitHubService> logger)
+        public GitHubService(HttpClient httpClient, IConfiguration config, ILogger<GitHubService> logger)
         {
             _httpClient = httpClient;
-            _token = token;
+            _token = config["GitServices:GitHub:Token"] ?? throw new ArgumentException("Brak tokena GitHub w konfiguracji.");
             _logger = logger;
 
             _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("GitIssueTracker", "1.0"));
@@ -66,6 +67,8 @@ namespace GitIssueTracker.Core.Services
         }
         public async Task<IssueResponse> UpdateIssueAsync(string repository, int issueNumber, IssueRequest issue)
         {
+            repository = Uri.UnescapeDataString(repository);
+
             var url = $"{_baseUrl}/repos/{repository}/issues/{issueNumber}";
 
             var payload = new
@@ -102,6 +105,8 @@ namespace GitIssueTracker.Core.Services
         }
         public async Task<bool> CloseIssueAsync(string repository, int issueNumber)
         {
+            repository = Uri.UnescapeDataString(repository);
+
             var url = $"{_baseUrl}/repos/{repository}/issues/{issueNumber}";
 
             var payload = new { state = "closed" };
