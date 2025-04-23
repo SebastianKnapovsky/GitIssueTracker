@@ -1,0 +1,19 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build
+bin/
+obj/
+*.dll
+*.exe
+*.log
+
+# Secrets
+appsettings.Development.json
+secrets.json
+
+# Others
+*.db
+*.DS_Store
