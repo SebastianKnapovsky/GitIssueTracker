@@ -1,7 +1,6 @@
-# GitIssueTracker
-GitIssueTracker (G.I.T.)
-
 # 🐙 GitIssueTracker
+
+GitIssueTracker (G.I.T.)
 
 **GitIssueTracker** to aplikacja webowa API, pozwalająca zarządzać zgłoszeniami (issues) w repozytoriach(GitHub/GitLab).
 
