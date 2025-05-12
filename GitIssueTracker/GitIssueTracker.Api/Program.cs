@@ -1,17 +1,42 @@
-using GitIssueTracker.Core.Services.Interfaces;
 using GitIssueTracker.Core.Services;
+using GitIssueTracker.Core.Services.Interfaces;
+using GitIssueTracker.Core.Services.Providers;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
-builder.Services.AddHttpClient<IGitHubService, GitHubService>();
-builder.Services.AddHttpClient<IGitLabService, GitLabService>();
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "GitIssueTracker API", Version = "v1" });
+    c.MapType<GitIssueTracker.Core.Enums.IssuePlatform>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Enum = Enum.GetNames(typeof(GitIssueTracker.Core.Enums.IssuePlatform))
+                   .Select(name => new OpenApiString(name))
+                   .Cast<IOpenApiAny>()
+                   .ToList()
+    });
+});
+
+builder.Services.AddHttpClient<GitHubIssueProvider>();
+builder.Services.AddHttpClient<GitLabIssueProvider>();
+
+builder.Services.AddSingleton<IIssueProvider, GitHubIssueProvider>();
+builder.Services.AddSingleton<IIssueProvider, GitLabIssueProvider>();
+
+builder.Services.AddSingleton<IIssueService, IssueService>();
 
 var app = builder.Build();
 
