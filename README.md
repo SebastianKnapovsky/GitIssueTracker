@@ -2,9 +2,11 @@
 
 GitIssueTracker (G.I.T.)
 
-**GitIssueTracker** to aplikacja webowa API, pozwalająca zarządzać zgłoszeniami (issues) w repozytoriach(GitHub/GitLab).
+**GitIssueTracker** is a REST API that allows managing issues in GitHub and GitLab repositories
 
-## 🔧 Technologie
+---
+
+## 🔧 Technologies
 
 - ASP.NET Core 8 (API)
 - C#
@@ -12,115 +14,72 @@ GitIssueTracker (G.I.T.)
 - Swagger
 - Moq / xUnit (testy jednostkowe)
 
-## 🧠 Architektura
+## 🧠 Architecture
 
-Projekt został podzielony na 3 warstwy:
+The project is split into 3 logical layers:
 
-GitIssueTracker.Api       - aplikacja API (kontrolery, konfiguracja, Swagger)
-GitIssueTracker.Core      - logika biznesowa, modele, serwisy i interfejsy
-GitIssueTracker.Tests     - testy jednostkowe (xUnit + Moq)
+GitIssueTracker.Api       - Entry point – Web API, controllers, config
+GitIssueTracker.Core      - Business logic, models, interfaces 
+GitIssueTracker.Tests     - Unit tests using xUnit and Moq  
 
-Rozdzielenie warstw:
-- ✅ Zachowanie zasady **Single Responsibility**
-- ✅ Ułatwia testowanie i rozwój (np. dodanie innych systemów zarządzania issue)
-- ✅ Umożliwia wykorzystanie serwisów jako biblioteki
+**Design Patterns:**
 
-## 🔁 Endpointy
+- Strategy / Plugin (`IIssueProvider`)
+- Template Method (`BaseIssueProvider`)
+- Dependency Injection (built-in DI container)
+- Single Responsibility Principle (SRP)
+- Open/Closed Principle (easy extensibility)
 
-GitHub:
-- POST /api/issues/github/{repository} – tworzenie zgłoszenia
-- PUT /api/issues/github/{repository}/{issueNumber} – aktualizacja zgłoszenia
-- DELETE /api/issues/github/{repository}/{issueNumber} – zamknięcie zgłoszenia
+## 📍 API Endpoints
 
-GitLab:
-- POST /api/issues/gitlab/{repository} – tworzenie zgłoszenia
-- PUT /api/issues/gitlab/{repository}/{issueNumber} – aktualizacja zgłoszenia
-- DELETE /api/issues/gitlab/{repository}/{issueNumber} – zamknięcie zgłoszenia
+| Method | URL                                                 | Description              |
+|--------|------------------------------------------------------|--------------------------|
+| POST   | `/api/issues/{platform}/{repository}`               | Create issue             |
+| PUT    | `/api/issues/{platform}/{repository}/{issueNumber}` | Update issue             |
+| DELETE | `/api/issues/{platform}/{repository}/{issueNumber}` | Close issue              |
 
-## ➕ Dodanie nowego silnika
 
-Aby dodać obsługę kolejnego systemu zarządzania zgłoszeniami (np. Bitbucket), wykonaj poniższe kroki:
+## ➕ Adding a New Platform (e.g., Bitbucket)
 
-1. **Utwórz interfejs**
-   - W katalogu `GitIssueTracker.Core/Services/Interfaces` dodaj nowy interfejs `IBitbucketService`
-   - Zdefiniuj metody:
-     - `Task<IssueResponse> CreateIssueAsync(string repository, IssueRequest issue);`
-     - `Task<IssueResponse> UpdateIssueAsync(string repository, int issueNumber, IssueRequest issue);`
-     - `Task<bool> CloseIssueAsync(string repository, int issueNumber);`
+1. Create a new class: `BitbucketIssueProvider : BaseIssueProvider, IIssueProvider`
+2. Implement `CreateAsync`, `UpdateAsync`, `CloseAsync`
+3. Register it in DI (`Program.cs`)
+4. Add to `IssuePlatform` enum
+5. Add token in `appsettings.Development.json`
 
-2. **Zaimplementuj klasę serwisu**
-   - W katalogu `GitIssueTracker.Core/Services` utwórz klasę `BitbucketService`
-   - Klasa powinna implementować `IBitbucketService`
-   - Obsługuje zapytania HTTP do API Bitbucketa (użyj `HttpClient`)
+## 🔐 API Token Configuration
 
-3. **Zarejestruj serwis w DI**
-   - W pliku `Program.cs` dodaj:
-     ```csharp
-     builder.Services.AddHttpClient<IBitbucketService, BitbucketService>();
-     ```
-
-4. **Dodaj konfigurację tokena**
-   - W pliku `appsettings.Development.json` dodaj:
-     ```json
-     "GitServices": {
-       "Bitbucket": {
-         "Token": "TWÓJ_BITBUCKET_TOKEN"
-       }
-     }
-     ```
-
-5. **Dodaj metody do kontrolera**
-   - W `IssuesController.cs` dodaj:
-     - `CreateIssueBitbucket(...)`
-     - `UpdateIssueBitbucket(...)`
-     - `CloseIssueBitbucket(...)`
-
-6. **Dodaj testy jednostkowe**
-   - Utwórz plik `BitbucketServiceTests.cs` w `GitIssueTracker.Tests`
-   - Dodaj testy kontrolera do `IssuesControllerTests.cs`
-   
-## 📈 Plan rozwoju
-
-- [ ] Dodanie wsparcia dla Bitbucket / Azure DevOps
-- [ ] Integracja z front-endem (React lub Blazor)
-- [ ] Autoryzacja użytkowników
-- [ ] Testy integracyjne
-- [ ] CI/CD z GitHub Actions
-- [ ] Ujednolicenie logiki w serwisach (np. wyodrębnienie wspólnych metod bazowych)
-- [ ] Refaktoryzacja kodu pod wzorce projektowe (np. Template Method / Strategy)
-
-## 📦 Wymagane paczki NuGet
-
-Projekt wymaga następujących bibliotek:
-
-- Microsoft.Extensions.Logging.Abstractions — logger 
-- Microsoft.AspNetCore.Mvc.Core — kontrolery Web API
-- System.Text.Json — serializacja i deserializacja JSON
-- Moq — mockowanie w testach
-- xunit, xunit.runner.visualstudio — framework testowy
-- Microsoft.NET.Test.Sdk — uruchamianie testów
-
-Po sklonowaniu repo, zainstaluj zależności za pomocą:
-
-dotnet restore
-
-## 🔐 Ustawienia API tokenów
-
-Do działania wymagane są tokeny do GitHub i GitLab. Należy je umieścić w pliku `appsettings.Development.json`:
+`appsettings.Development.json`:
 
 "GitServices": {
   "GitHub": {
-    "Token": "TWÓJ_GITHUB_TOKEN"
+    "Token": "GITHUB_TOKEN"
   },
   "GitLab": {
-    "Token": "TWÓJ_GITLAB_TOKEN"
+    "Token": "GITLAB_TOKEN"
   }
 }
 
+
+## 📦 Required NuGet Packages
+
+The project depends on the following NuGet packages:
+
+- Microsoft.Extensions.Logging.Abstractions — logging abstraction for injecting ILogger
+- Microsoft.AspNetCore.Mvc.Core — core framework for Web API controllers
+- System.Text.Json — built-in JSON serialization/deserialization
+- Moq — mocking framework for unit tests
+- xunit, xunit.runner.visualstudio — unit testing framework
+- Microsoft.NET.Test.Sdk — enables test execution
+
+After cloning the repository, restore all packages:
+
+dotnet restore
+
+
 ## 🧪 Testy
 
-Projekt posiada komplet testów jednostkowych dla:
-- GitHubService, GitLabService — testy z mockowaniem HttpClient
-- IssuesController — testy z mockowaniem serwisów i loggera
+The project includes unit tests focused on core logic:
+- IssueService — verifies correct delegation to platform-specific providers
 
 
