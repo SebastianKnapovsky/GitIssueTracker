@@ -26,7 +26,8 @@ namespace GitIssueTracker.Core.Services.Providers
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            return JsonDocument.Parse(content).RootElement;
+            using var document = JsonDocument.Parse(content);
+            return document.RootElement.Clone();
         }
 
         private StringContent SerializePayload(object payload)
