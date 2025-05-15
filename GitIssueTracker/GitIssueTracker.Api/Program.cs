@@ -1,3 +1,4 @@
+using GitIssueTracker.Api.Middlewares;
 using GitIssueTracker.Core.Services;
 using GitIssueTracker.Core.Services.Interfaces;
 using GitIssueTracker.Core.Services.Providers;
@@ -46,6 +47,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandlingMiddleware();
 
 app.UseHttpsRedirection();
 

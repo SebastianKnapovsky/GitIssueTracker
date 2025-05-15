@@ -21,46 +21,22 @@ namespace GitIssueTracker.Api.Controllers
         [HttpPost("{platform}/{repository}")]
         public async Task<IActionResult> CreateIssue(IssuePlatform platform, string repository, [FromBody] IssueRequest request)
         {
-            try
-            {
-                var result = await _issueService.CreateIssueAsync(platform, repository, request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating issue for platform {Platform}", platform);
-                return StatusCode(500, ex.Message);
-            }
+            var result = await _issueService.CreateIssueAsync(platform, repository, request);
+            return Created(result.Url ?? string.Empty, result); 
         }
 
         [HttpPut("{platform}/{repository}/{issueNumber}")]
         public async Task<IActionResult> UpdateIssue(IssuePlatform platform, string repository, int issueNumber, [FromBody] IssueRequest request)
         {
-            try
-            {
-                var result = await _issueService.UpdateIssueAsync(platform, repository, issueNumber, request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating issue for platform {Platform}", platform);
-                return StatusCode(500, ex.Message);
-            }
+            var result = await _issueService.UpdateIssueAsync(platform, repository, issueNumber, request);
+            return Ok(result);
         }
 
         [HttpDelete("{platform}/{repository}/{issueNumber}")]
         public async Task<IActionResult> CloseIssue(IssuePlatform platform, string repository, int issueNumber)
         {
-            try
-            {
-                var result = await _issueService.CloseIssueAsync(platform, repository, issueNumber);
-                return result ? NoContent() : StatusCode(500, "Could not close issue");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error closing issue for platform {Platform}", platform);
-                return StatusCode(500, ex.Message);
-            }
+            var result = await _issueService.CloseIssueAsync(platform, repository, issueNumber);
+            return result ? NoContent() : StatusCode(500, "Could not close issue");
         }
     }
 }

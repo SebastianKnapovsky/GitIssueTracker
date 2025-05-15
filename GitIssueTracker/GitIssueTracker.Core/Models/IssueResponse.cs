@@ -5,7 +5,7 @@ namespace GitIssueTracker.Core.Models
     public class IssueResponse
     {
         /// <summary>
-        /// Numer zgłoszenia w systemie zewnętrznym.
+        /// Issue Number in the external system.
         /// </summary>
         public int IssueNumber { get; set; }
         public string? Url { get; set; }
