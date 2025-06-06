@@ -77,7 +77,7 @@ After cloning the repository, restore all packages:
 dotnet restore
 
 
-## 🧪 Testy
+## 🧪 Tests
 
 The project includes unit tests focused on core logic:
 - IssueService — verifies correct delegation to platform-specific providers
